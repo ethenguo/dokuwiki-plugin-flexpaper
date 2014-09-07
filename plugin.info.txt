@@ -3,5 +3,5 @@ author Ethen Guo
 email  Ethen.Guo@Gmail.com
 date   2014-09-07
 name   flexpaper plugin
-desc   flexpaper for dokuwiki
+desc   flexpaper for dokuwiki {{flexpaper>namespace:sample.swf?width:100%;height:588px;start:0}}
 url    https://www.dokuwiki.org/plugin:flexpaper
