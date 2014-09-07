@@ -1,0 +1,7 @@
+base   flexpaper
+author Ethen Guo
+email  Ethen.Guo@Gmail.com
+date   2014-09-07
+name   flexpaper plugin
+desc   flexpaper for dokuwiki
+url    http://www.example.com
