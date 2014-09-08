@@ -23,7 +23,7 @@ class syntax_plugin_flexpaper extends DokuWiki_Syntax_Plugin {
      */
     public function getPType() {
         //return 'FIXME: normal|block|stack';
-        return 'block';
+        return 'normal';
     }
     /**
      * @return int Sort order - Low numbers go before high numbers
@@ -57,14 +57,60 @@ class syntax_plugin_flexpaper extends DokuWiki_Syntax_Plugin {
      * @return array Data for the renderer
      */
     public function handle($match, $state, $pos, Doku_Handler &$handler){
-		# Default width, height and stratpage
-		$data = array('width' => '100%', 'height' => '588px', 'start' => '');
 
+		# 提取匹配的文件名与参数
 		$match = trim(substr($match, 7, -2));
-		list($data['swf'], $params) = explode('?',$match);
-		$params = explode(';',$params);
+		list($file, $params) = explode('?',$match);
 
-		# handle width, height and stratpage
+		# 检查是否是支持的文件类型 .swf, .pdf
+		if(!preg_match('/.swf$|.pdf$/i', $file)) {
+			$data['error'] = 'File <b>"<i>' . $file . '</i>"</b> is <b>NOT SUPPORT!</b>';
+			return $data;
+		}
+
+		# 检查文件是否存在
+		if(!file_exists(mediaFN($file))) {
+			$data['error'] = 'File <b>"<i>' . $file . '</i>"</b> is <b>NOT EXIST!</b>';
+			return $data;
+		}
+
+		# Default width, height and stratpage
+		$data['width'] = '100%';
+		$data['height'] = '588px';
+		$data['start'] = '';
+
+		# 分别处理 .swf 与 .pdf
+		if(preg_match('/.swf$/i', $file)) {
+			$data['swf'] = $file;
+		} else {
+			# 检查系统函数 exec 是否可用？
+			if(!function_exists('exec')) {
+				# 系统函数 exec 不可用，返回错误消息
+				$data['error'] = 'Function <b>"<i>exec()</i>"</b> is <b>NOT EXIST!</b>';
+				return $data;
+			}
+
+			# 处理 .pdf: 用 SWFTOOLS 把 .pdf 转成 .swf 格式
+			# pdf2swf [-options] file.pdf -o file.swf
+			$swf = $file . '.swf';
+			# swf 文件是否存在，不存在则执行 pdf 转 swf 命令；存在则可以直接显示
+			if(!file_exists(mediaFN($swf))) {
+				# 需执行的命令
+				$command = '"' . DOKU_PLUGIN . 'flexpaper/SWFTools/pdf2swf" "' . mediaFN($file) . '" -o "' . mediaFN($swf) . '"';
+				# 执行命令
+				$lastline = exec(escapeshellcmd($command),$output,$status);
+				# 如果命令执行失败，返回命令行最后一行消息
+				if($status) {
+					$data['error'] = $lastline;
+					return $data;
+				}
+				# .pdf 转换 .swf 文件成功
+			}
+			$data['swf'] = $swf;
+		}
+
+		# handle Parameters(width, height and stratpage)
+		$params = explode(';',$params);
 		if($params) {
 			foreach($params as $param) {
 				list($key, $value) = explode(':',$param);
@@ -120,8 +166,13 @@ class syntax_plugin_flexpaper extends DokuWiki_Syntax_Plugin {
     public function render($mode, Doku_Renderer &$renderer, $data) {
         if($mode != 'xhtml') return false;
 
-		$renderer->doc .= '<div class="plugin_flexpaper" style="background: #FFB">' . DOKU_LF;
-		$renderer->doc .= '<div id="documentViewer" class="flexpaper_viewer" style="width:' . $data['width'] . '; height:' . $data['height'] . '"></div>' . DOKU_LF;
+		if($data['error']) {
+			$renderer->doc .= '<div id="documentViewer" class="plugin_flexpaper" style="background: #FFB; width: 100%">' . $data['error'] . '</div>' . DOKU_LF;
+			return false;
+		}
+
+#		$renderer->doc .= '<div class="plugin_flexpaper" style="background: #DFD">' . DOKU_LF;
+		$renderer->doc .= '<div id="documentViewer" class="plugin_flexpaper" style="background: #DFD; width:' . $data['width'] . '; height:' . $data['height'] . '">' . mediaFN($data['swf']) . '</div>' . DOKU_LF;
 		$renderer->doc .= '<script type="text/javascript">/*<![CDATA[*/' . DOKU_LF;
 		$renderer->doc .= 'jQuery(\'#documentViewer\').FlexPaperViewer(' . DOKU_LF;
 		$renderer->doc .= '    { config : {' . DOKU_LF;
@@ -156,7 +207,7 @@ class syntax_plugin_flexpaper extends DokuWiki_Syntax_Plugin {
 		$renderer->doc .= '    }}' . DOKU_LF;
 		$renderer->doc .= ');' . DOKU_LF;
 		$renderer->doc .= '/*!]]>*/</script>' . DOKU_LF;
-		$renderer->doc .= '</div>' . DOKU_LF;
+#		$renderer->doc .= '</div>' . DOKU_LF;
 
         return true;
     }
