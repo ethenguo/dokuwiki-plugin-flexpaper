@@ -86,7 +86,7 @@ class syntax_plugin_flexpaper extends DokuWiki_Syntax_Plugin {
 			# 检查系统函数 exec 是否可用？
 			if(!function_exists('exec')) {
 				# 系统函数 exec 不可用，返回错误消息
-				$data['error'] = 'Function <b>"<i>exec()</i>"</b> is <b>NOT EXIST!</b>';
+				$data['error'] = 'PHP Function <b>"<a href="http://php.net/manual/en/function.exec.php"><i>exec()</i></a>"</b> is <b>NOT EXIST!</b> Please contact your server administrator.';
 				return $data;
 			}
 
@@ -96,7 +96,7 @@ class syntax_plugin_flexpaper extends DokuWiki_Syntax_Plugin {
 			# swf 文件是否存在，不存在则执行 pdf 转 swf 命令；存在则可以直接显示
 			if(!file_exists(mediaFN($swf))) {
 				# 需执行的命令
-				$command = '"' . DOKU_PLUGIN . 'flexpaper/SWFTools/pdf2swf" "' . mediaFN($file) . '" -o "' . mediaFN($swf) . '"';
+				$command = '"' . DOKU_PLUGIN . 'flexpaper/SWFTools/pdf2swf" -f -T 9 "' . mediaFN($file) . '" -o "' . mediaFN($swf) . '"';
 				# 执行命令
 				$lastline = exec(escapeshellcmd($command),$output,$status);
 				# 如果命令执行失败，返回命令行最后一行消息
