@@ -40,7 +40,7 @@ class syntax_plugin_flexpaper extends DokuWiki_Syntax_Plugin {
      */
     public function connectTo($mode) {
         //$this->Lexer->addSpecialPattern('<FIXME>',$mode,'plugin_flexpaper');
-        $this->Lexer->addSpecialPattern('\{\{flex>.*?\}\}',$mode,'plugin_flexpaper');
+        $this->Lexer->addSpecialPattern('\{\{flexpaper>.*?\}\}',$mode,'plugin_flexpaper');
     }
 
 //    public function postConnect() {
@@ -59,7 +59,7 @@ class syntax_plugin_flexpaper extends DokuWiki_Syntax_Plugin {
     public function handle($match, $state, $pos, Doku_Handler &$handler){
 
 		# 提取匹配的文件名与参数
-		$match = trim(substr($match, 7, -2));
+		$match = trim(substr($match, 12, -2));
 		list($file, $params) = explode('?',$match);
 
 		# 检查是否是支持的文件类型 .swf, .pdf
